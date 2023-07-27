@@ -3,14 +3,15 @@ package com.tje.controller.contact;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.springframework.stereotype.Controller;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
+@AllArgsConstructor // 전체 필드 초기 생성자
+@NoArgsConstructor  // 빈 생성자
 public class Contact {
-    private Integer id;
+    // key
+    private String email;
     private String name;
     private String phone;
-    private String email;
 }

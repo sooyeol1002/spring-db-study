@@ -19,7 +19,6 @@ public class Post {
     // database의 auto_increment를 사용함
     // auto_increment: 레코드가 추가될때 자동으로 증가되는 값을 사용
     // 1, 2, 3 ....
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long no;
     private String title;
     private String content;

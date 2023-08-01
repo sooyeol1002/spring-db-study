@@ -1,10 +1,7 @@
 package com.ysy.myapp.contact;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,11 +14,6 @@ import java.util.function.Function;
 @RestController
 @RequestMapping(value = "/contacts")
 public class ContactController {
-    // 동시처리에 대한 지원을 해주는 자료구조
-    // 여러명의 유저들이 같은 데이터를 접근할 수 있음.
-    // 데이터베이스는 기본적으로 동시성에 대한 구현이 있음.
-//    Map<String, Contact> map = new ConcurrentHashMap<>();
-
     // 싱글턴: 첫 실행시점 객체가 1번 생성됨. 이후 부터는 생성된 객체를 재사용
     // static: JVM 실행 시점에 객체를 생성
 
@@ -82,8 +74,15 @@ public class B {
         // repo.findAll(Sort sort); 정렬하여 전체 테이블 목록 조회
         // SELECT * FROM 테이블 ORDER BY 정렬컬럼, 정렬컬럼....
 
-        List<Contact> list =
-                repo.findAll(Sort.by("name").ascending());
+        // JPA Respository Sort 인터페이스를 사용
+//        List<Contact> list =
+//                repo.findAll(Sort.by("name").ascending());
+
+        // Native-Query를 이용한 방법
+//        List<Contact> list = repo.findContactsSortByName();
+
+        // repository query creation을 이용한 방법
+        List<Contact> list = repo.findAllByOrderByName();
 
         return list;
     }
@@ -115,8 +114,15 @@ public class B {
         // 이메일 중복 검증
         // 409: conflict
 
-        if(contact.getEmail() != null && repo.findById(contact.getEmail()).isPresent()) {
-//        if(contact.getEmail() != null && map.get(contact.getEmail()) != null) {
+//         JPA Query creation을 사용
+        if(contact.getEmail()!= null && repo.findByEmail(contact.getEmail()).isPresent()) {
+
+//         Native query를 사용
+//        if(contact.getEmail()!= null && repo.findContactByEmail(contact.getEmail()).isPresent()) {
+
+//         JPA Repository의 기본 인터페이스 메서드를 사용
+//        if(contact.getEmail() != null && repo.findById(contact.getEmail()).isPresent()) {
+
             // 맵에 해당 이메일이 있음
             // 이미 있는 데이터를 클라이언트(브라우저) 보냈거나
             // 클라이언트에서 중복 데이터를 보냈거나..
@@ -133,24 +139,15 @@ public class B {
         // 테이블에 레코드 추가
         // key값이 테이블에 이미 있으면 update
         // 없으면 insert 구문이 실행됨.
-        repo.save(contact);
 
-//        // 응답 객체 생성
-//        // 실제로 생성된 객체를 응답
-//        Map<String, Object> res = new HashMap<>();
-//        res.put("data", map.get(contact.getEmail()));
-//        res.put("message", "created");
+        // 생성된 객체를 반환
+        Contact savedContact = repo.save(contact);
 
         // 응답 객체 생성(ResponseEntity)
         // 상태코드, 데이터, 메시지
         // 실제로 생성된 레코드(row)를 응답
-
-        // repo.findById(PK값);
-        // Optional은 null이 될 수 없음.
-        Optional<Contact> savedContact =
-                repo.findById(contact.getEmail());
-        // 레코드가 존재하는지 여부..
-        if(savedContact.isPresent()) {
+        // 생성된 레코드가 존재하는지 여부..
+        if(savedContact != null) {
             Map<String, Object> res = new HashMap<>();
             res.put("data", savedContact);
             res.put("message", "created");
@@ -174,8 +171,17 @@ public class B {
         // 해당 키(key)의 데이터가 없으면
 //        if(map.get(email) == null) {
 
+
         // PK값으로 레코드로 1건 조회해서 없으면
-        if(!repo.findById(email).isPresent()){
+
+//         JPA Repository 기본 메서드 사용
+//        if(!repo.findById(email).isPresent()){
+
+//         Native Query를 이용하여 사용
+//        if(!repo.findContactByEmail(email).isPresent()){
+
+//          Query Creation을 이용하여 사용
+        if(!repo.findByEmail(email).isPresent()){
             // 404: NOT FOUND, 해당 경로에 리소스가 없다.
             // DELETE /contacts/kdkcom@naver.com
             // Response Status Code : 404
@@ -187,5 +193,51 @@ public class B {
         // 레코드(리소스-데이터베이스의파일일부분) 삭제
         repo.deleteById(email);
         return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    // PUT(전체수정), PATCH(일부수정)
+    // PUT /hong@gmail.com
+    // {"name":"길동", "phone":"010.."}
+
+    /*
+    @Data
+    class ContactModifyRequest {
+       private String name;
+       private String phone;
+    }
+     */
+    @PutMapping(value = "/{email}")
+    public ResponseEntity modifyContact
+    (@PathVariable String email,
+     @RequestBody ContactModifyRequest contact) {
+        System.out.println(email);
+        System.out.println(contact);
+
+        // 1. 키값으로 조회해옴
+        Optional<Contact> findedContact = repo.findById(email);
+
+        // 2. 해당 레코드가 있는지 확인
+        if(!findedContact.isPresent()){
+            // 404: NOT FOUND, 해당 경로에 리소스가 없다.
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        // 존재하는 레코드(키값, @Id값이 존재)
+        Contact toModifyContact = findedContact.get();
+        // 3. 조회해온 레코드에 필드값을 수정
+        // 매개변수에 name값이 있으면 수정
+        if(contact.getName() != null && !contact.getName().isEmpty()) {
+            toModifyContact.setName(contact.getName());
+        }
+        // 매개변수에 phone값이 있으면 수정
+        if(contact.getPhone() != null && !contact.getPhone().isEmpty()) {
+            toModifyContact.setPhone(contact.getPhone());
+        }
+
+        // (@Id 값이 존재하므로 update를 시도)
+        repo.save(toModifyContact);
+
+        // 200 OK 처리
+        return ResponseEntity.ok().build();
     }
 }

@@ -65,8 +65,8 @@ public class PostController {
         // 매개변수 영역과 함수 본체를 화살표로 구분함
         // 함수 본체의 수식 값이 반환 값
 //        list.sort((a,b)-> (int)(b.getNo() - a.getNo()));
-        List<Post> list = repo.findAllByOrderByNo();
 
+        List<Post> list = repo.findAllByOrderByNo();
         return list;
     }
 
@@ -85,13 +85,13 @@ public class PostController {
     @PostMapping
     public ResponseEntity<Map<String, Object>> addPost(@RequestBody Post post) {
 //     1. 입력값 검증(title, content)
-        System.out.println(post.getNo());
-        System.out.println(post.getTitle());
-        System.out.println(post.getCreatorName());
-        System.out.println(post.getCreatedTime());
+//        System.out.println(post.getNo());
+//        System.out.println(post.getTitle());
+//        System.out.println(post.getCreatorName());
+//        System.out.println(post.getCreatedTime());
 
 //      -> 입력값 오류(빈 값)가 있으면 400 에러 띄움
-        if(post.getTitle() == null || post.getContent() == null || post.getContent().isEmpty() || post.getTitle().isEmpty()){
+        if (post.getTitle() == null || post.getContent() == null || post.getContent().isEmpty() || post.getTitle().isEmpty()) {
             Map<String, Object> response = new HashMap<>();
             response.put("data", null);
             response.put("message", "[title] and [content] is Required Field");
@@ -104,24 +104,14 @@ public class PostController {
 //        long no = num.incrementAndGet();
 //        post.setNo(no);
 
+
 //     3. 번호(no), 시간값(createdTime) 게시자이름(creatorName) 요청 객체에 설정
-//        post.setCreatorName("Dodo");
         post.setCreatedTime(new Date().getTime());
 
-//     4. 맵에 추가
-//        map.put(no, post);
-//        System.out.println(post);
-
+        System.out.println(post.getCreatedTime());
 //     5. 생성된 객체를 맵에서 찾아서 반환, 201
-//        Map<String, Object> res = new HashMap<>();
-//        System.out.println(post.getNo());
         Post savedPost = repo.save(post);
-//        res.put("data", map.get(no));
-//        res.put("message", "created");
-
-//        System.out.println(ResponseEntity.status(HttpStatus.CREATED).body(res));
-//        return ResponseEntity.status(HttpStatus.CREATED).build();
-//        return ResponseEntity.status(HttpStatus.CREATED).body(res);
+        System.out.println(savedPost);
         if (savedPost != null) {
             Map<String, Object> res = new HashMap<>();
             res.put("data", savedPost);
@@ -133,9 +123,9 @@ public class PostController {
 
     @DeleteMapping(value = "/{no}")
     public ResponseEntity removePost(@PathVariable long no) {
+        System.out.println(no);
 
-
-        if (!repo.findById(no).isPresent()){
+        if (!repo.findById(no).isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
@@ -150,16 +140,16 @@ public class PostController {
 
         Optional<Post> findedPost = repo.findById(no);
 
-        if (!findedPost.isPresent()){
+        if (!findedPost.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
         Post toModifyPost = findedPost.get();
 
-        if(post.getTitle() != null && !post.getTitle().isEmpty()) {
+        if (post.getTitle() != null && !post.getTitle().isEmpty()) {
             toModifyPost.setTitle(post.getTitle());
         }
-        if(post.getCreatorName() != null && !post.getCreatorName().isEmpty()) {
+        if (post.getCreatorName() != null && !post.getCreatorName().isEmpty()) {
             toModifyPost.setCreatorName(post.getCreatorName());
         }
         repo.save(toModifyPost);

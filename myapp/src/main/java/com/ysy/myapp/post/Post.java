@@ -19,6 +19,7 @@ public class Post {
     // database의 auto_increment를 사용함
     // auto_increment: 레코드가 추가될때 자동으로 증가되는 값을 사용
     // 1, 2, 3 ....
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // db의 auto-increment를 사용함 // 레코드가 추가될때 자동으로 증가되는 값을 사용
     private long no;
     private String title;
     private String content;
@@ -31,4 +32,7 @@ public class Post {
 //    private long createdTime;
     // 데이터베이스에 NULL을 넣고 싶으면 Class 타입을 써야함
     private Long createdTime;
+    public void setCreatedTime(long timestamp) {
+        this.createdTime = timestamp;
+    }
 }

@@ -49,13 +49,15 @@ value("hong@gmail", null, "홍길동", "010-1234-5678");
 
 insert into contact (name, phone, email, image)
 value("john doe", "010-0987-6543", "john@gmail.com", null);
+-- insert into post(no, title, content, creatorName)
+-- value(0, "abc", "content", "양수열") 
 /* 기존에 있는 email로 insert
 Error Code: 1062. Duplicate entry 'john@gmail.com' 
 for key 'contact.PRIMARY'	0.000 sec
 */
 /* 
 Priamry Key 제약조건: 
-1. 테이블내의 데이터 중에서 같은 값이 중복이 있으며 안 됨
+1. 테이블내의 데이터 중에서 같은값이 중복이 있으며 안 됨
 2. null 값이 될 수 없음
 */
 
@@ -103,7 +105,9 @@ create table post (
 
 insert into post (created_time, title) value(2, "제목");
 select * from post;
-delete from post where no = 2;
+-- delete from post where no = 2;
 
 select * from contact order by name asc;
 select * from contact where email = 'john@hotmail.com';
+delete from post where no < 60;
+select * from post;

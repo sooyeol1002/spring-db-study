@@ -1,4 +1,4 @@
-package com.ysy.myapp.auth;
+package com.ysy.myapp.auth.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -26,7 +26,7 @@ public class Login {
     private String username;
 
     @Column(length = 500)
-    private String password;
+    private String secret;
 
     // EAGER: JPA 메서드 실행하면 바로 관계 테이블 조회
     // LAZY: 관계 테이블 객체를 엑세스 시점에 SQL 실행해서 조회

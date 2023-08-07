@@ -1,4 +1,4 @@
-package com.ysy.myapp.auth;
+package com.ysy.myapp.auth.request;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

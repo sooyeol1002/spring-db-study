@@ -1,5 +1,11 @@
 package com.ysy.myapp.auth;
 
+import com.ysy.myapp.auth.entity.Login;
+import com.ysy.myapp.auth.entity.LoginRepository;
+import com.ysy.myapp.auth.entity.Profile;
+import com.ysy.myapp.auth.entity.ProfileRepository;
+import com.ysy.myapp.auth.request.SignupRequest;
+import com.ysy.myapp.auth.util.HashUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,6 +15,9 @@ public class AuthService {
 
     private LoginRepository repo;
     private ProfileRepository profileRepo;
+
+    @Autowired
+    private HashUtil hash;
 
     @Autowired
     public AuthService(LoginRepository repo, ProfileRepository profileRepo) {
@@ -36,21 +45,20 @@ public class AuthService {
     // 아이솔레이션 레벨(commit, uncommited)
     @Transactional
     public long createIdentity(SignupRequest req) {
-        HashUtil util = new HashUtil();
         // 1. login 정보를 insert
-        Login toSaveLogin = Login.
-                builder()
+        Login toSaveLogin = Login
+                .builder()
                 .username(req.getUsername())
-                .password(util.createHash(req.getPassword()))
+                .secret(hash.createHash(req.getPassword()))
                 .build();
         Login savedLogin = repo.save(toSaveLogin);
 
-        Profile toSaveProfile =
-                Profile.builder()
-                        .nickname(req.getNickname())
-                        .email(req.getEmail())
-                        .login(savedLogin)
-                        .build();
+        Profile toSaveProfile = Profile
+                .builder()
+                .nickname(req.getNickname())
+                .email(req.getEmail())
+                .login(savedLogin)
+                .build();
         // 2. profile 정보를 insert(login_id포함)하고 레코드의 id값을 가져옴
         long profileId = profileRepo.save(toSaveProfile).getId();
 

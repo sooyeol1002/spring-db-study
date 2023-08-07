@@ -1,5 +1,7 @@
 package com.ysy.myapp.contact;
 
+import com.ysy.myapp.auth.AuthProfile;
+import com.ysy.myapp.auth.util.Auth;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.data.repository.query.FluentQuery;
@@ -93,8 +95,11 @@ public class B {
     // ?키=값&키=값....
     // @RequestParam
     // quer-string 값을 매개변수 받는 어노테이션
+    @Auth
     @GetMapping(value = "/paging")
-    public Page<Contact> getContactPaging(@RequestParam int page, @RequestParam int size) {
+    public Page<Contact> getContactPaging(@RequestParam int page,
+                                          @RequestParam int size,
+                                          @RequestAttribute AuthProfile authProfile) {
         System.out.println(page);
         System.out.println(size);
         // 기본적으로 key 정렬(default)
@@ -110,7 +115,8 @@ public class B {
         // LIMT 10: 10건의 레코드
         // LIMIT 10 OFFSET 10 : 앞으로 10건을 건너 뛰고 다음 10건을 조회
         PageRequest pageRequest = PageRequest.of(page, size, sort);
-        return repo.findAll(pageRequest);
+        // 해당 사용자가 소유자인 연락처 목록만 조회
+        return repo.findByOwnerId(authProfile.getId(), pageRequest);
     }
 
     // GET /contacts/paging/searchByName?page=0&size=10&name=hong
@@ -148,12 +154,13 @@ public class B {
     }
 
     // HTTP 1.1 POST /contacts
+    @Auth
     @PostMapping
-    public ResponseEntity<Map<String, Object>> addContact(@RequestBody Contact contact) {
+    public ResponseEntity<Map<String, Object>> addContact(@RequestBody Contact contact, @RequestAttribute AuthProfile authProfile) {
         // 클라이언트에서 넘어온 JSON이 객체로 잘 변환됐는지 확인
-        System.out.println(contact.getName());
-        System.out.println(contact.getPhone());
-        System.out.println(contact.getEmail());
+//        System.out.println(contact.getName());
+//        System.out.println(contact.getPhone());
+//        System.out.println(contact.getEmail());
 
         // 이메일 필수값 검증
         // 400: bad request
@@ -193,16 +200,16 @@ public class B {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(res);
         }
 
-//        // 맵에 객체 추가
-//        map.put(contact.getEmail(), contact);
-
         // 테이블에 레코드 추가
         // key값이 테이블에 이미 있으면 update
         // 없으면 insert 구문이 실행됨.
 
+        // 생성자의 id를 설정함
+        contact.setOwnerId(authProfile.getId());
         // 생성된 객체를 반환
         Contact savedContact = repo.save(contact);
 
+        // 3. 응답 처리
         // 응답 객체 생성(ResponseEntity)
         // 상태코드, 데이터, 메시지
         // 실제로 생성된 레코드(row)를 응답

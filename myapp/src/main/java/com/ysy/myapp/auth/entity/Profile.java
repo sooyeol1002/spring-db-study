@@ -1,4 +1,4 @@
-package com.ysy.myapp.auth;
+package com.ysy.myapp.auth.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
